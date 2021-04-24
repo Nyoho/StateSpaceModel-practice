@@ -81,7 +81,7 @@ function plot_forecast(name; today=-1)
     #hover_texts = [ [a,b] for (a,b) in zip(expected_values - σs, expected_values + σs) ]
     plot!(tss, expected_values, ribbon=(1*σs), color="#8af", fillalpha=.5, label="68% CI")
 
-    colors = fill("#000", length(ts))
+    colors = fill("#aaa", length(ts))
     if(today >= 0)
         push!(ts, Dates.today())
         push!(xs, today)
@@ -89,14 +89,19 @@ function plot_forecast(name; today=-1)
     end
 
     plot!(ts, xs, label="# of cases",
-        color=colors, shape=:auto,
-        marker=(:circle, 3, .75, Plots.stroke(1, :black)),
+        color="#aaa", shape=:auto,
+        marker=(:circle, 3, 0.75, Plots.stroke(1, :black)),
         xrotation=-90,
         xlabel="date",
         ylabel="number of cases",
         legend=:topleft,
         ticks=:native,
         title="$(name)の最近の$(days)日と次の7日予測"
+    )
+    scatter!(ts, xs;
+        label="",        
+        color=colors,
+        marker=(:circle, 3)
     )
 
 end
