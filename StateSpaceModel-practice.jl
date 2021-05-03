@@ -1,8 +1,14 @@
+# -*- coding: utf-8 -*-
 using StateSpaceModels, CSV, HTTP, DataFrames, Plots
 plotly()
 
-url = "NHKのCOVID-19の都道府県別dailyのCSVファイル"
+# +
+using DotEnv
+DotEnv.config()
+
+url = ENV["CSV_URL"] # NHKのCOVID-19の都道府県別dailyのCSVファイル
 df0 = CSV.File(HTTP.get(url).body) |> DataFrame
+# -
 
 function plot_smoothed_state(name)
     df = filter(row -> row[:都道府県名] == name, df0)
