@@ -109,7 +109,6 @@ function plot_forecast(name; today=-1)
         color=colors,
         marker=(:circle, 3)
     )
-
 end
 
 # 使い方
