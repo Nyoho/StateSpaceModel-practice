@@ -63,6 +63,7 @@ function plot_forecast(name; today=-1)
         forec = forecast(model, 7)
         e = reduce(vcat,forec.expected_value)
         v = sqrt.(reduce(vcat, forec.covariance))
+        # 予測の初日([1])だけ保存
         push!(expected_values, e[1])
         push!(σs, v[1])
     end
@@ -84,14 +85,16 @@ function plot_forecast(name; today=-1)
     append!(σs, latest_v)
     
     plot(tss, expected_values, ribbon=(2*σs), color="#8ea", fillalpha=.5, label="95% CI")
-    #hover_texts = [ [a,b] for (a,b) in zip(expected_values - σs, expected_values + σs) ]
     plot!(tss, expected_values, ribbon=(1*σs), color="#8af", fillalpha=.5, label="68% CI")
 
     colors = fill("#aaa", length(ts))
+    markers = fill((:circle, 3, 0.75, Plots.stroke(1, :black)), length(ts))
     if(today >= 0)
+        @printf("\n実際には%d人だった。", today)
         push!(ts, Dates.today())
         push!(xs, today)
         push!(colors, "#f00")
+        push!(markers, (:circle, 3, 0.75, Plots.stroke(1, :white)))
     end
 
     plot!(ts, xs, label="# of cases",
@@ -100,19 +103,57 @@ function plot_forecast(name; today=-1)
         xrotation=-90,
         xlabel="date",
         ylabel="number of cases",
-        legend=:topleft,
-        ticks=:native,
-        title="$(name)の最近の$(days)日と次の7日予測"
+        #ticks=:native,
+        title="$(name)の$(days)日と次の7日予測"
     )
-    scatter!(ts, xs;
+#     scatter!(ts, xs;
+#         label="",        
+#         color=colors,
+#         marker=(:circle, 3, 0.75, Plots.stroke(1, :red))
+#     )
+    plot!([ts[end]+Day(1)], seriestype=:vline, label="")
+    p1 = annotate!(ts[end]+Day(1), 0, text("→ forecast", 8, :left))
+    
+    if(today >= 0)
+    p1 = scatter!([ts[end]], [xs[end]];
         label="",        
-        color=colors,
-        marker=(:circle, 3)
+        color="#f00",
+        marker=(:xcross, 5, 0.9, Plots.stroke(1, :red))
+    )
+    end
+
+    rectangle(x, y, w, h) = Shape([(x, y), (x+w,y), (x+w,y+h), (x,y+h)])
+    p2 = plot(Shape([(0,0),(1,0)]), opacity=.5, label="")
+    plot!(p2, rectangle(0, latest_e[1] - 1*latest_v[1], 1, 2*latest_v[1]), opacity=.5, label="")
+    plot!(p2, rectangle(0, latest_e[1] - 2*latest_v[1], 1, 4*latest_v[1]), opacity=.5, label="")
+    ylabel!(p2,"$(ts[end])のCI")
+    xticks!(:none)
+    if(today >= 0)
+    scatter!(p2, [.5], [xs[end]];
+        label="",        
+        color="#f00",
+        xrotation=-90,   
+        marker=(:xcross, 10, 0.99, Plots.stroke(1, :red))
+    )
+    end
+
+    l = @layout [a{0.9w} b{0.05w}]
+    plot(p1, p2,
+        layout=l,
+        legend=:topleft,
+        size=(800,500)
     )
 end
 
-# 使い方
+# ## 使い方
+
 plot_smoothed_state("広島県")
+
 plot_forecast("東京都")
+
 plot_forecast("東京都", today=759) # 今日のを手動で入れるにはキーワード引数でtodayを設定する。
+
+
+plot_forecast("東京都")
+
 
