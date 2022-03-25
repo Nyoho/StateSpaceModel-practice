@@ -54,13 +54,14 @@ function plot_forecast(name; today=-1)
     t = map(time_string -> Date(time_string,"y/m/d"), t)
     days = 7*6
     expected_values = []
+    days_forecast = 7
     σs = []
     for i in reverse(1:days)
         xs = x[end-days+1-i:end-i]
         ts = t[end-days+1-i:end-i]
         model = BasicStructural(xs, 7)
         fit!(model)
-        forec = forecast(model, 7)
+        forec = forecast(model, days_forecast)
         e = reduce(vcat,forec.expected_value)
         v = sqrt.(reduce(vcat, forec.covariance))
         # 予測の初日([1])だけ保存
@@ -73,14 +74,14 @@ function plot_forecast(name; today=-1)
     model = BasicStructural(xs, 7)
     fit!(model)
     
-    forec = forecast(model, 7)
+    forec = forecast(model, days_forecast)
     latest_e = reduce(vcat,forec.expected_value)
     latest_v = sqrt.(reduce(vcat, forec.covariance))
     
     print("$(name) $(ts[end] + Dates.Day(1))\n")
     @printf("68%%の確率で%.1f〜%.1f人\n", latest_e[1] - latest_v[1], latest_e[1] + latest_v[1])
     @printf("95%%の確率で%.1f〜%.1f人", latest_e[1] - 2*latest_v[1], latest_e[1] + 2*latest_v[1])
-    tss = vcat(ts, [ts[end] + Dates.Day(i) for i in 1:7])
+    tss = vcat(ts, [ts[end] + Dates.Day(i) for i in 1:days_forecast])
     append!(expected_values, latest_e)
     append!(σs, latest_v)
     
@@ -104,7 +105,7 @@ function plot_forecast(name; today=-1)
         xlabel="date",
         ylabel="number of cases",
         #ticks=:native,
-        title="$(name)の$(days)日と次の7日予測"
+        title="$(name)の$(days)日と次の$(days_forecast)日予測"
     )
 #     scatter!(ts, xs;
 #         label="",        
